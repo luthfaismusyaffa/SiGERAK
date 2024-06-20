@@ -1,6 +1,0 @@
-{
-    "rewrites": [
-      { "source": "/history", "destination": "/api/history" }
-    ]
-  }
-  
