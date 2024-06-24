@@ -40,16 +40,11 @@ async function fetchAndUpdateHistory() {
         row.appendChild(waktuCell);
 
         // Loop untuk menambahkan nilai sensor ke dalam baris yang sama
-        if (Array.isArray(data)) {
-          data.forEach((sensorValue) => {
-            const dataCell = document.createElement('td');
-            dataCell.textContent = sensorValue;
-            row.appendChild(dataCell);
-          });
-        } else {
-          console.error('Data received is not in expected format:', data);
-          // Optionally handle or log the error here
-        }
+        data.forEach((sensorValue) => {
+          const dataCell = document.createElement('td');
+          dataCell.textContent = sensorValue;
+          row.appendChild(dataCell);
+        });
 
         // Tambahkan baris ke dalam tabel
         historyDataTbody.appendChild(row);
