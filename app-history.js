@@ -26,10 +26,13 @@ async function fetchAndUpdateHistory() {
       historyDataTbody.removeChild(historyDataTbody.firstChild);
     }
 
-    // Pastikan setidaknya satu data sensor ada
-    if (sensorData.some(data => data !== null && data !== undefined)) {
+    // Filter data yang valid (bukan null atau undefined)
+    const validSensorData = sensorData.filter(data => data !== null && data !== undefined);
+
+    // Pastikan ada setidaknya satu data yang valid
+    if (validSensorData.length > 0) {
       // Loop untuk setiap data sensor yang valid
-      sensorData.forEach((data, index) => {
+      validSensorData.forEach((data, index) => {
         // Buat baris baru untuk setiap data
         const row = document.createElement('tr');
         const waktuCell = document.createElement('td');
@@ -37,17 +40,22 @@ async function fetchAndUpdateHistory() {
         row.appendChild(waktuCell);
 
         // Loop untuk menambahkan nilai sensor ke dalam baris yang sama
-        data.forEach((sensorValue) => {
-          const dataCell = document.createElement('td');
-          dataCell.textContent = sensorValue;
-          row.appendChild(dataCell);
-        });
+        if (Array.isArray(data)) {
+          data.forEach((sensorValue) => {
+            const dataCell = document.createElement('td');
+            dataCell.textContent = sensorValue;
+            row.appendChild(dataCell);
+          });
+        } else {
+          console.error('Data received is not in expected format:', data);
+          // Optionally handle or log the error here
+        }
 
         // Tambahkan baris ke dalam tabel
         historyDataTbody.appendChild(row);
       });
     } else {
-      console.log('Tidak ada data yang masuk.');
+      console.log('Tidak ada data sensor yang valid diterima.');
     }
 
   } catch (error) {
