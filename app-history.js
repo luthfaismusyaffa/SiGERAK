@@ -1,4 +1,4 @@
-// Fungsi untuk memperbarui nilai sensor di halaman history
+// Fungsi untuk mengambil dan memperbarui nilai sensor di halaman history
 async function fetchAndUpdateHistory() {
   const apiEndpoints = [
     'https://sgp1.blynk.cloud/external/api/get?token=-oEfXklH3Nh4UxcmWgBbq_kkIAzTFvF9&v1',
@@ -8,7 +8,7 @@ async function fetchAndUpdateHistory() {
     'https://sgp1.blynk.cloud/external/api/get?token=-oEfXklH3Nh4UxcmWgBbq_kkIAzTFvF9&v5'
   ];
 
-  const historyDataTbody = document.getElementById('historyData');
+  const historyDataTbody = document.querySelector('#historyData tbody');
   const waktuLokal = new Date().toLocaleString();
 
   try {
@@ -22,12 +22,10 @@ async function fetchAndUpdateHistory() {
     }));
 
     // Hapus semua baris sebelum menambahkan yang baru
-    while (historyDataTbody.firstChild) {
-      historyDataTbody.removeChild(historyDataTbody.firstChild);
-    }
+    historyDataTbody.innerHTML = '';
 
     // Filter data yang valid (bukan null atau undefined)
-    const validSensorData = sensorData.filter(data => data !== null && data !== undefined);
+    const validSensorData = sensorData.filter(data => Array.isArray(data));
 
     // Pastikan ada setidaknya satu data yang valid
     if (validSensorData.length > 0) {
@@ -40,16 +38,11 @@ async function fetchAndUpdateHistory() {
         row.appendChild(waktuCell);
 
         // Loop untuk menambahkan nilai sensor ke dalam baris yang sama
-        if (Array.isArray(data)) {
-          data.forEach((sensorValue) => {
-            const dataCell = document.createElement('td');
-            dataCell.textContent = sensorValue;
-            row.appendChild(dataCell);
-          });
-        } else {
-          console.error('Data received is not in expected format:', data);
-          // Optionally handle or log the error here
-        }
+        data.forEach((sensorValue) => {
+          const dataCell = document.createElement('td');
+          dataCell.textContent = sensorValue;
+          row.appendChild(dataCell);
+        });
 
         // Tambahkan baris ke dalam tabel
         historyDataTbody.appendChild(row);
@@ -68,3 +61,20 @@ fetchAndUpdateHistory();
 
 // Atur interval untuk memperbarui nilai sensor setiap 2 detik (2000 ms)
 setInterval(fetchAndUpdateHistory, 2000);
+
+// Event listener untuk tombol Delete All History
+const deleteButton = document.getElementById('deleteButton');
+deleteButton.addEventListener('click', async () => {
+  try {
+    // Kirim permintaan untuk menghapus data
+    const response = await fetch('/delete-history', { method: 'DELETE' });
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    console.log('History deleted successfully.');
+    // Hapus semua baris dari tabel secara lokal
+    historyDataTbody.innerHTML = '';
+  } catch (error) {
+    console.error('Error deleting history:', error);
+  }
+});
