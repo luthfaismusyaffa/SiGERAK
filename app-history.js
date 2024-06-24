@@ -1,107 +1,70 @@
-// Fungsi untuk mengambil data dari file JSON lokal
-async function fetchData() {
-  try {
-      const response = await fetch('data.json');
-      if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      const data = await response.json();
-      updateTable(data);
-  } catch (error) {
-      console.error('Error fetching data:', error);
-  }
-}
-
-// Fungsi untuk memperbarui tabel dengan data yang diambil
-function updateTable(data) {
-  const historyDataTbody = document.getElementById('historyData');
-  historyDataTbody.innerHTML = ''; // Kosongkan tabel terlebih dahulu
-
-  data.forEach(row => {
-      const rowElement = document.createElement('tr');
-      row.forEach(cell => {
-          const cellElement = document.createElement('td');
-          cellElement.textContent = cell;
-          rowElement.appendChild(cellElement);
-      });
-      historyDataTbody.appendChild(rowElement);
-  });
-}
-
-// Fungsi untuk menyimpan data ke file JSON lokal
-async function saveData(sensorData) {
-  try {
-      const response = await fetch('save-data.php', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(sensorData)
-      });
-      if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-  } catch (error) {
-      console.error('Error sending data:', error);
-  }
-}
-
-// Fungsi untuk menghapus semua data di file JSON lokal
-async function deleteAllData() {
-  try {
-      const response = await fetch('delete-data.php', {
-          method: 'POST'
-      });
-      if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      fetchData(); // Refresh tabel setelah menghapus data
-  } catch (error) {
-      console.error('Error deleting data:', error);
-  }
-}
-
-// Fungsi untuk mengambil data sensor dari Blynk
-async function fetchBlynkData() {
+// Fungsi untuk memperbarui nilai sensor di halaman history
+async function fetchAndUpdateHistory() {
   const apiEndpoints = [
-      'https://sgp1.blynk.cloud/external/api/get?token=-oEfXklH3Nh4UxcmWgBbq_kkIAzTFvF9&v1',
-      'https://sgp1.blynk.cloud/external/api/get?token=-oEfXklH3Nh4UxcmWgBbq_kkIAzTFvF9&v2',
-      'https://sgp1.blynk.cloud/external/api/get?token=-oEfXklH3Nh4UxcmWgBbq_kkIAzTFvF9&v3',
-      'https://sgp1.blynk.cloud/external/api/get?token=-oEfXklH3Nh4UxcmWgBbq_kkIAzTFvF9&v4',
-      'https://sgp1.blynk.cloud/external/api/get?token=-oEfXklH3Nh4UxcmWgBbq_kkIAzTFvF9&v5'
+    'https://sgp1.blynk.cloud/external/api/get?token=-oEfXklH3Nh4UxcmWgBbq_kkIAzTFvF9&v1',
+    'https://sgp1.blynk.cloud/external/api/get?token=-oEfXklH3Nh4UxcmWgBbq_kkIAzTFvF9&v2',
+    'https://sgp1.blynk.cloud/external/api/get?token=-oEfXklH3Nh4UxcmWgBbq_kkIAzTFvF9&v3',
+    'https://sgp1.blynk.cloud/external/api/get?token=-oEfXklH3Nh4UxcmWgBbq_kkIAzTFvF9&v4',
+    'https://sgp1.blynk.cloud/external/api/get?token=-oEfXklH3Nh4UxcmWgBbq_kkIAzTFvF9&v5'
   ];
 
+  const historyDataTbody = document.getElementById('historyData');
+  const waktuLokal = new Date().toLocaleString();
+
   try {
-      const sensorData = await Promise.all(apiEndpoints.map(async endpoint => {
-          const response = await fetch(endpoint);
-          if (!response.ok) {
-              throw new Error(`HTTP error! Status: ${response.status}`);
-          }
-          const data = await response.json();
-          return data;
-      }));
+    // Ambil data dari setiap endpoint
+    const sensorData = await Promise.all(apiEndpoints.map(async (endpoint, index) => {
+      const response = await fetch(endpoint);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return await response.json();
+    }));
 
-      const dataToSend = {
-          waktu: new Date().toLocaleString(),
-          jari1: sensorData[0],
-          jari2: sensorData[1],
-          jari3: sensorData[2],
-          jari4: sensorData[3],
-          jari5: sensorData[4]
-      };
+    // Hapus semua baris sebelum menambahkan yang baru
+    while (historyDataTbody.firstChild) {
+      historyDataTbody.removeChild(historyDataTbody.firstChild);
+    }
 
-      await saveData(dataToSend);
-      fetchData(); // Refresh tabel setelah menyimpan data
+    // Filter data yang valid (bukan null atau undefined)
+    const validSensorData = sensorData.filter(data => data !== null && data !== undefined);
+
+    // Pastikan ada setidaknya satu data yang valid
+    if (validSensorData.length > 0) {
+      // Loop untuk setiap data sensor yang valid
+      validSensorData.forEach((data, index) => {
+        // Buat baris baru untuk setiap data
+        const row = document.createElement('tr');
+        const waktuCell = document.createElement('td');
+        waktuCell.textContent = waktuLokal;
+        row.appendChild(waktuCell);
+
+        // Loop untuk menambahkan nilai sensor ke dalam baris yang sama
+        if (Array.isArray(data)) {
+          data.forEach((sensorValue) => {
+            const dataCell = document.createElement('td');
+            dataCell.textContent = sensorValue;
+            row.appendChild(dataCell);
+          });
+        } else {
+          console.error('Data received is not in expected format:', data);
+          // Optionally handle or log the error here
+        }
+
+        // Tambahkan baris ke dalam tabel
+        historyDataTbody.appendChild(row);
+      });
+    } else {
+      console.log('Tidak ada data sensor yang valid diterima.');
+    }
+
   } catch (error) {
-      console.error('Error fetching Blynk data:', error);
+    console.error('Error fetching and updating history:', error);
   }
 }
 
-// Panggil fungsi untuk mengambil data dan menampilkan riwayat saat halaman dimuat
-document.addEventListener('DOMContentLoaded', fetchData);
+// Panggil fungsi untuk pertama kali
+fetchAndUpdateHistory();
 
-// Panggil fungsi untuk mengambil data sensor dari Blynk dan menyimpannya ke Google Sheets secara berkala (misalnya setiap 2 detik)
-setInterval(fetchBlynkData, 2000);
-
-// Event listener untuk tombol delete
-document.getElementById('deleteButton').addEventListener('click', deleteAllData);
+// Atur interval untuk memperbarui nilai sensor setiap 2 detik (2000 ms)
+setInterval(fetchAndUpdateHistory, 2000);
