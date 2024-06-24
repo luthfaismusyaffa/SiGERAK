@@ -26,13 +26,10 @@ async function fetchAndUpdateHistory() {
       historyDataTbody.removeChild(historyDataTbody.firstChild);
     }
 
-    // Filter data yang valid (bukan null atau undefined)
-    const validSensorData = sensorData.filter(data => data !== null && data !== undefined);
-
-    // Pastikan ada setidaknya satu data yang valid
-    if (validSensorData.length > 0) {
+    // Pastikan setidaknya satu data sensor ada
+    if (sensorData.some(data => data !== null && data !== undefined)) {
       // Loop untuk setiap data sensor yang valid
-      validSensorData.forEach((data, index) => {
+      sensorData.forEach((data, index) => {
         // Buat baris baru untuk setiap data
         const row = document.createElement('tr');
         const waktuCell = document.createElement('td');
@@ -50,7 +47,7 @@ async function fetchAndUpdateHistory() {
         historyDataTbody.appendChild(row);
       });
     } else {
-      console.log('Tidak ada data sensor yang valid diterima.');
+      console.log('Tidak ada data yang masuk.');
     }
 
   } catch (error) {
