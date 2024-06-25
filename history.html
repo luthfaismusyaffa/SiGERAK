@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Riwayat Sensor</title>
     <link rel="stylesheet" href="style.css">
-    <script defer src="app-history.js"></script>
+    <!-- Include your custom JavaScript file -->
+    <script type="module" src="app-history.js"></script>
 </head>
 <body>
     <header>
@@ -22,6 +23,10 @@
       
         <center><h1>Sensor Monitoring</h1></center>
 
+        <div class="table-controls">
+          <button id="deleteButton" class="delete-button">Delete All History</button>
+      </div>
+
         <table>
             <thead>
                 <tr>
@@ -34,7 +39,7 @@
                 </tr>
             </thead>
             <tbody id="historyData">
-                <!-- Data akan diisi oleh JavaScript -->
+                <!-- Data will be populated by JavaScript -->
             </tbody>
         </table>
     </section>
