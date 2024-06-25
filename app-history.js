@@ -20,8 +20,8 @@ const db = getDatabase(app);
 // Function to fetch data from Firebase
 async function fetchData() {
   try {
-    const dbRef = ref(db);
-    const snapshot = await get(child(dbRef, 'data'));
+    const dbRef = ref(db, 'data');
+    const snapshot = await get(dbRef);
     if (snapshot.exists()) {
       const data = snapshot.val();
       updateTable(data);
@@ -33,19 +33,17 @@ async function fetchData() {
   }
 }
 
-// Function to convert timestamp to desired time format in Jakarta timezone
+// Function to convert timestamp to desired time format
 function formatTime(seconds) {
   const date = new Date(seconds * 1000); // Convert seconds to milliseconds
-  const options = { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric', 
-    hour: 'numeric', 
-    minute: 'numeric', 
-    second: 'numeric', 
-    timeZone: 'Asia/Jakarta' 
-  };
-  return date.toLocaleString('id-ID', options); // Format for Indonesian locale and Jakarta timezone
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const secondsFormatted = String(date.getSeconds()).padStart(2, '0');
+
+  return `${day}/${month}/${year} ${hours}:${minutes}:${secondsFormatted}`;
 }
 
 // Function to update table with fetched data
@@ -56,28 +54,31 @@ function updateTable(data) {
   Object.keys(data.jari1).forEach(key => {
     const rowElement = document.createElement('tr');
     
+    // Assume each entry in jari1, jari2, jari3, jari4, and jari5 has 'value' and 'timestamp'
+    const timestamp = data.jari1[key].timestamp;
+
     const waktuElement = document.createElement('td');
-    waktuElement.textContent = formatTime(parseInt(key, 10)); // Format the timestamp
+    waktuElement.textContent = formatTime(parseInt(timestamp, 10)); // Format the timestamp
     rowElement.appendChild(waktuElement);
 
     const jari1Element = document.createElement('td');
-    jari1Element.textContent = data.jari1[key];
+    jari1Element.textContent = data.jari1[key].value;
     rowElement.appendChild(jari1Element);
 
     const jari2Element = document.createElement('td');
-    jari2Element.textContent = data.jari2[key];
+    jari2Element.textContent = data.jari2[key].value;
     rowElement.appendChild(jari2Element);
 
     const jari3Element = document.createElement('td');
-    jari3Element.textContent = data.jari3[key];
+    jari3Element.textContent = data.jari3[key].value;
     rowElement.appendChild(jari3Element);
 
     const jari4Element = document.createElement('td');
-    jari4Element.textContent = data.jari4[key];
+    jari4Element.textContent = data.jari4[key].value;
     rowElement.appendChild(jari4Element);
 
     const jari5Element = document.createElement('td');
-    jari5Element.textContent = data.jari5[key];
+    jari5Element.textContent = data.jari5[key].value;
     rowElement.appendChild(jari5Element);
 
     historyDataTbody.appendChild(rowElement);
