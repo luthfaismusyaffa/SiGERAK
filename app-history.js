@@ -1,8 +1,7 @@
-// Import the functions you need from the SDKs you need
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, get, remove, child } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, get, remove, set, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-// Your web app's Firebase configuration
+// Firebase configuration for history and rekam medis
 const firebaseConfig = {
   apiKey: "AIzaSyDTgz5-fD_cyvb6_OT_Ead6B_0-5Qw9I5c",
   authDomain: "sensor-3aae6.firebaseapp.com",
@@ -33,32 +32,18 @@ async function fetchData() {
   }
 }
 
-// Function to convert timestamp to desired time format
-function formatTime(seconds) {
-  const date = new Date(seconds * 1000); // Convert seconds to milliseconds
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
-  const year = date.getFullYear();
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const secondsFormatted = String(date.getSeconds()).padStart(2, '0');
-
-  return `${day}/${month}/${year} ${hours}:${minutes}:${secondsFormatted}`;
-}
-
 // Function to update table with fetched data
 function updateTable(data) {
   const historyDataTbody = document.getElementById('historyData');
-  historyDataTbody.innerHTML = ''; // Clear the table first
+  historyDataTbody.innerHTML = '';
 
   Object.keys(data.jari1).forEach(key => {
     const rowElement = document.createElement('tr');
-    
-    // Assume each entry in jari1, jari2, jari3, jari4, and jari5 has 'value' and 'timestamp'
+
     const timestamp = data.jari1[key].timestamp;
 
     const waktuElement = document.createElement('td');
-    waktuElement.textContent = formatTime(parseInt(timestamp, 10)); // Format the timestamp
+    waktuElement.textContent = formatTime(parseInt(timestamp, 10));
     rowElement.appendChild(waktuElement);
 
     const jari1Element = document.createElement('td');
@@ -85,16 +70,87 @@ function updateTable(data) {
   });
 }
 
+// Function to convert timestamp to desired time format
+function formatTime(seconds) {
+  const date = new Date(seconds * 1000);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const secondsFormatted = String(date.getSeconds()).padStart(2, '0');
+
+  return `${day}/${month}/${year} ${hours}:${minutes}:${secondsFormatted}`;
+}
+
 // Function to delete all data in Firebase
 async function deleteAllData() {
   try {
     const dbRef = ref(db, 'data');
     await remove(dbRef);
-    fetchData(); // Refresh the table after deleting data
+    fetchData();
   } catch (error) {
     console.error('Error deleting data:', error);
   }
 }
+
+// Function to save new data to Firebase
+async function saveData(nama, umur, alamat) {
+  try {
+    const dbRef = ref(db, 'data');
+    const snapshot = await get(dbRef);
+    
+    if (snapshot.exists()) {
+      const sensorData = snapshot.val(); // Fetch 'data' from Firebase
+      
+      // Check if sensorData is defined and has the necessary structure
+      if (sensorData && sensorData.jari1 && sensorData.jari2 && sensorData.jari3 && sensorData.jari4 && sensorData.jari5) {
+        const rekamMedisRef = ref(db, 'rekam_medis/' + Date.now());
+        
+        // Save data under rekam_medis
+        await set(rekamMedisRef, {
+          nama,
+          umur,
+          alamat,
+          sensorData: {  // Store specific sensor data
+            jari1: sensorData.jari1,
+            jari2: sensorData.jari2,
+            jari3: sensorData.jari3,
+            jari4: sensorData.jari4,
+            jari5: sensorData.jari5
+          }
+        });
+        
+        alert('Data berhasil disimpan!');
+        redirectToRekamMedis();
+      } else {
+        alert('Sensor data tidak tersedia untuk disimpan');
+      }
+    } else {
+      alert('Tidak ada data tersedia untuk disimpan');
+    }
+  } catch (error) {
+    console.error('Error saving data:', error);
+    alert('Terjadi kesalahan saat menyimpan data.');
+  }
+}
+
+// Event listener for save button
+document.getElementById('saveButton').addEventListener('click', () => {
+  document.getElementById('inputForm').style.display = 'block';
+});
+
+// Event listener for form submission
+document.getElementById('dataForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+
+  const nama = document.getElementById('nama').value;
+  const umur = document.getElementById('umur').value;
+  const alamat = document.getElementById('alamat').value;
+
+  saveData(nama, umur, alamat);
+  document.getElementById('inputForm').style.display = 'none';
+});
 
 // Call function to fetch data and display history when page loads
 document.addEventListener('DOMContentLoaded', fetchData);
