@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Riwayat Sensor</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Include your custom JavaScript file -->
     <script type="module" src="app-history.js"></script>
 </head>
 <body>
@@ -15,18 +14,17 @@
             <ul>
                 <li><a href="index.html">Home</a></li>
                 <li><a href="history.html">History</a></li>
+                <li><a href="rekam_medis.html">Rekam Medis</a></li>
                 <li><a href="about.html">About</a></li>
             </ul>
         </nav>
     </header>
     <section class="history">
-      
         <center><h1>Sensor Monitoring</h1></center>
-
         <div class="table-controls">
-          <button id="deleteButton" class="delete-button">Delete All History</button>
-      </div>
-
+            <button id="deleteButton" class="delete-button">Delete All History</button>
+            <button id="saveButton" class="save-button">Simpan Data</button>
+        </div>
         <table>
             <thead>
                 <tr>
@@ -42,6 +40,24 @@
                 <!-- Data will be populated by JavaScript -->
             </tbody>
         </table>
+        <div id="inputForm" style="display:none;">
+            <form id="dataForm">
+                <h3>Form Data Diri</h3>
+                <label for="nama">Nama:</label>
+                <input type="text" id="nama" name="nama" required><br>
+                <label for="umur">Umur:</label>
+                <input type="number" id="umur" name="umur" required><br>
+                <label for="alamat">Alamat:</label>
+                <input type="text" id="alamat" name="alamat" required><br>
+                <button type="submit">Simpan</button>
+            </form>
+        </div>
     </section>
+    <script>
+        // Redirect to rekam medis page after saving data
+        function redirectToRekamMedis() {
+            window.location.href = "rekam_medis.html";
+        }
+    </script>
 </body>
 </html>
